@@ -308,4 +308,53 @@ class LinkHelperTest {
             Assert.assertFalse(markedUpContent.contains("${getDomain(tag.url)})"))
         }
     }
+
+    @Test
+    fun testShortenLink() {
+        mapOf(
+            "http://example.org" to "example.org",
+            "https://example.org/" to "example.org",
+            "https://www.example.org" to "example.org",
+            "http://sub.example.org" to "sub.example.org",
+            "http://www.example.org/foo" to "example.org/foo",
+            "http://www.example.org/foo/" to "example.org/foo/",
+            "http://www.example.org/foo/bar" to "example.org/foo/bar",
+            "http://example.org/foo?q=bar" to "example.org/foo?q=bar",
+            "http://example.org/?" to "example.org",
+            "http://example.org#" to "example.org",
+            "http://example.org/#" to "example.org",
+            "http://example.org/?#" to "example.org",
+            "http://example.org/#foo" to "example.org#foo",
+            "http://example.org/foo?bar#baz" to "example.org/foo?bar#baz",
+            "http://example.org/?a=b%20c" to "example.org?a=b%20c",
+            "http://example.org/foo%20bar" to "example.org/foo%20bar",
+            "http://example.org#foo%20bar" to "example.org#foo%20bar",
+            "http://example.org/%40%41%42" to "example.org/%40%41%42",
+            "foo" to null,
+            "foo:" to null,
+            "foo/bar" to null,
+            "ftp://example.org" to null
+        ).forEach { input, expected ->
+            Assert.assertEquals(expected, shortenUrl(input))
+        }
+
+        mapOf(
+            "http://example.org" to "example.org",
+            "http://example.org/" to "example.org",
+
+        ).forEach { input, expected ->
+            Assert.assertEquals("example.org", shortenUrl(input, 0))
+        }
+
+        mapOf(
+            "http://example.org/fo" to "example.org/fo",
+            "http://example.org/foo" to "example.org/foo",
+            "http://example.org/foos" to "example.org/foos",
+            "http://example.org/fooXY" to "example.org/foo…",
+            "http://example.org/fooXYZ" to "example.org/foo…",
+        ).forEach { input, expected ->
+            Assert.assertEquals(expected, shortenUrl(input, 4))
+        }
+
+    }
 }

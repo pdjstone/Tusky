@@ -37,6 +37,7 @@ import com.keylesspalace.tusky.R
 import com.keylesspalace.tusky.entity.HashTag
 import com.keylesspalace.tusky.entity.Status.Mention
 import com.keylesspalace.tusky.interfaces.LinkListener
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 fun getDomain(urlString: String?): String {
     val host = urlString?.toUri()?.host
@@ -57,7 +58,8 @@ fun getDomain(urlString: String?): String {
  * @param listener to notify about particular spans that are clicked
  */
 fun setClickableText(view: TextView, content: CharSequence, mentions: List<Mention>, tags: List<HashTag>?, listener: LinkListener) {
-    val spannableContent = markupHiddenUrls(view.context, content)
+    var spannableContent = markupHiddenUrls(view.context, content)
+    spannableContent = shortenUrls(spannableContent)
 
     view.text = spannableContent.apply {
         getSpans(0, content.length, URLSpan::class.java).forEach {
@@ -96,6 +98,70 @@ fun markupHiddenUrls(context: Context, content: CharSequence): SpannableStringBu
     }
 
     return spannableContent
+}
+
+
+/**
+ * Remove http:// and https:// prefix from visible links, and shorten the path segment of long links
+ */
+@VisibleForTesting
+fun shortenUrls(content: CharSequence): SpannableStringBuilder {
+    val spannableContent = SpannableStringBuilder(content)
+    val spans = spannableContent.getSpans(0, content.length, URLSpan::class.java)
+
+    for (span in spans) {
+        val start = spannableContent.getSpanStart(span)
+        val end = spannableContent.getSpanEnd(span)
+        val originalText = spannableContent.subSequence(start, end)
+
+        // match spans where the URL is the same as the visible text
+        if (originalText.toString().equals(span.url)) {
+            val replacementText = shortenUrl(span.url, 15)
+            if (replacementText != null)
+                spannableContent.replace(start, end, replacementText)
+        }
+    }
+
+    return spannableContent
+}
+
+/**
+ * Shorten a HTTP(S) URL string by removing the protocol and optionally truncating the
+ * path/query/fragment path of the URL. The host portion will have 'www.' removed if present
+ * but otherwise won't be shortened.
+ * @param url URL to be shortened
+ * @param maxPathLength Maximum length of the path/query/fragment portion of the URL. A value of
+ * -1 will leave the path untouched.
+ */
+@VisibleForTesting
+fun shortenUrl(url: String, maxPathLength: Int = -1): String? {
+    val uri = url.toHttpUrlOrNull()?.toUri() ?: return null
+    val shortUrl = StringBuilder()
+
+    shortUrl.append(getDomain(url))
+
+    if (maxPathLength != 0) {
+        var path = StringBuilder()
+        if (uri.path != null && !uri.path.equals("/")) {
+            path.append(uri.rawPath)
+        }
+        if (!uri.query.isNullOrBlank()) {
+            path.append('?')
+            path.append(uri.rawQuery)
+        }
+        if (!uri.fragment.isNullOrBlank()) {
+            path.append('#')
+            path.append(uri.rawFragment)
+        }
+        if (maxPathLength != -1) {
+            if (path.length > maxPathLength+1) {
+                path = StringBuilder(path.substring(0, maxPathLength))
+                path.append('\u2026') // ellipsis
+            }
+        }
+        shortUrl.append(path)
+    }
+    return shortUrl.toString()
 }
 
 @VisibleForTesting
