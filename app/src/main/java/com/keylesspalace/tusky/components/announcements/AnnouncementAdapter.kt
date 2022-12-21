@@ -34,6 +34,7 @@ import com.keylesspalace.tusky.util.EmojiSpan
 import com.keylesspalace.tusky.util.emojify
 import com.keylesspalace.tusky.util.parseAsMastodonHtml
 import com.keylesspalace.tusky.util.setClickableText
+import com.keylesspalace.tusky.util.shortenUrls
 import com.keylesspalace.tusky.util.visible
 import java.lang.ref.WeakReference
 
@@ -62,7 +63,7 @@ class AnnouncementAdapter(
         val chips = holder.binding.chipGroup
         val addReactionChip = holder.binding.addReactionChip
 
-        val emojifiedText: CharSequence = item.content.parseAsMastodonHtml().emojify(item.emojis, text, animateEmojis)
+        val emojifiedText: CharSequence = item.content.parseAsMastodonHtml().emojify(item.emojis, text, animateEmojis).shortenUrls()
 
         setClickableText(text, emojifiedText, item.mentions, item.tags, listener)
 

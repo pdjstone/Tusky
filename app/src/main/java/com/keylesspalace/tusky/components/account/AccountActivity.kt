@@ -77,6 +77,7 @@ import com.keylesspalace.tusky.util.loadAvatar
 import com.keylesspalace.tusky.util.parseAsMastodonHtml
 import com.keylesspalace.tusky.util.setClickableText
 import com.keylesspalace.tusky.util.show
+import com.keylesspalace.tusky.util.shortenUrls
 import com.keylesspalace.tusky.util.viewBinding
 import com.keylesspalace.tusky.util.visible
 import com.keylesspalace.tusky.view.showMuteAccountDialog
@@ -401,7 +402,7 @@ class AccountActivity : BottomSheetActivity(), ActionButtonActivity, HasAndroidI
         binding.accountUsernameTextView.text = usernameFormatted
         binding.accountDisplayNameTextView.text = account.name.emojify(account.emojis, binding.accountDisplayNameTextView, animateEmojis)
 
-        val emojifiedNote = account.note.parseAsMastodonHtml().emojify(account.emojis, binding.accountNoteTextView, animateEmojis)
+        val emojifiedNote = account.note.parseAsMastodonHtml().emojify(account.emojis, binding.accountNoteTextView, animateEmojis).shortenUrls()
         setClickableText(binding.accountNoteTextView, emojifiedNote, emptyList(), null, this)
 
         accountFieldAdapter.fields = account.fields ?: emptyList()

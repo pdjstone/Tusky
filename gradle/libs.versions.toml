@@ -19,6 +19,7 @@ androidx-testing = "2.1.0"
 androidx-viewpager2 = "1.0.0"
 androidx-work = "2.7.1"
 autodispose = "2.1.1"
+better-link-movement-method = "2.2.0"
 bouncycastle = "1.70"
 conscrypt = "2.5.2"
 coroutines = "1.6.4"
@@ -85,6 +86,7 @@ androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 autodispose-android-lifecycle = { module = "com.uber.autodispose2:autodispose-androidx-lifecycle", version.ref = "autodispose" }
 autodispose-core = { module = "com.uber.autodispose2:autodispose", version.ref = "autodispose" }
+better-link-movement-method = { module = "me.saket:better-link-movement-method", version.ref = "better-link-movement-method" }
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncycastle" }
 conscrypt-android = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
 dagger-android-core = { module = "com.google.dagger:dagger-android", version.ref = "dagger" }

@@ -38,6 +38,9 @@ import com.keylesspalace.tusky.entity.HashTag
 import com.keylesspalace.tusky.entity.Status.Mention
 import com.keylesspalace.tusky.interfaces.LinkListener
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import me.saket.bettermovementmethod.BetterLinkMovementMethod
+
+private const val MAX_URL_PATH_LENGTH = 15
 
 fun getDomain(urlString: String?): String {
     val host = urlString?.toUri()?.host
@@ -58,15 +61,20 @@ fun getDomain(urlString: String?): String {
  * @param listener to notify about particular spans that are clicked
  */
 fun setClickableText(view: TextView, content: CharSequence, mentions: List<Mention>, tags: List<HashTag>?, listener: LinkListener) {
-    var spannableContent = markupHiddenUrls(view.context, content)
-    spannableContent = shortenUrls(spannableContent)
+    val spannableContent = markupHiddenUrls(view.context, content)
 
     view.text = spannableContent.apply {
         getSpans(0, content.length, URLSpan::class.java).forEach {
             setClickableText(it, this, mentions, tags, listener)
         }
     }
-    view.movementMethod = LinkMovementMethod.getInstance()
+    view.movementMethod = BetterLinkMovementMethod.newInstance().apply {
+        setOnLinkLongClickListener { textView, url ->
+            Log.d(TAG, "long click $url")
+            // Handle long-click or return false to let the framework handle this link.
+            true
+        }
+    }
 }
 
 @VisibleForTesting
@@ -104,10 +112,10 @@ fun markupHiddenUrls(context: Context, content: CharSequence): SpannableStringBu
 /**
  * Remove http:// and https:// prefix from visible links, and shorten the path segment of long links
  */
-@VisibleForTesting
-fun shortenUrls(content: CharSequence): SpannableStringBuilder {
-    val spannableContent = SpannableStringBuilder(content)
-    val spans = spannableContent.getSpans(0, content.length, URLSpan::class.java)
+
+fun CharSequence.shortenUrls(): CharSequence {
+    val spannableContent = SpannableStringBuilder(this)
+    val spans = spannableContent.getSpans(0, this.length, URLSpan::class.java)
 
     for (span in spans) {
         val start = spannableContent.getSpanStart(span)
@@ -116,7 +124,7 @@ fun shortenUrls(content: CharSequence): SpannableStringBuilder {
 
         // match spans where the URL is the same as the visible text
         if (originalText.toString().equals(span.url)) {
-            val replacementText = shortenUrl(span.url, 15)
+            val replacementText = shortenUrl(span.url, MAX_URL_PATH_LENGTH)
             if (replacementText != null)
                 spannableContent.replace(start, end, replacementText)
         }
